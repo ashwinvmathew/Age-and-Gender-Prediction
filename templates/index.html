@@ -1,0 +1,227 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Age and Gender Prediction</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 40px;
+      margin: 0;
+      background: linear-gradient(to bottom right, #e0eafc, #cfdef3);
+      overflow-x: hidden;
+    }
+    .bubbles {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: -1;
+      overflow: hidden;
+    }
+    .bubble {
+      position: absolute;
+      bottom: -100px;
+      width: 40px; height: 40px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 50%;
+      animation: rise 10s infinite ease-in;
+    }
+    @keyframes rise {
+      0% { transform: translateY(0) scale(1); }
+      100% { transform: translateY(-1200px) scale(1.5); }
+    }
+    h1 {
+      font-size: 2.5rem;
+      color: #333;
+      overflow: hidden;
+      white-space: nowrap;
+      border-right: 3px solid #007BFF;
+      width: 0;
+      animation: typing 3s steps(30, end) forwards;
+    }
+    @keyframes typing {
+      from { width: 0 }
+      to { width: 100% }
+    }
+    form {
+      margin: 30px auto;
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+      width: 350px;
+      opacity: 0;
+      animation: fadeIn 1.2s ease forwards;
+    }
+   input[type="file"] {
+    display: none;
+}
+
+/* Custom file upload styling */
+.custom-file-upload {
+    display: inline-block;
+    background: #f0f0f0;
+    color: #333;
+    padding: 10px 20px;
+    border: 2px dashed #007BFF;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-bottom: 15px;
+}
+
+.custom-file-upload:hover {
+    background-color: #007BFF;
+    color: white;
+    border-style: solid;
+}
+
+/* Predict button styling */
+.predict-btn {
+    padding: 10px 25px;
+    font-size: 16px;
+    background: linear-gradient(to right, #007BFF, #00c6ff);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3);
+    transition: transform 0.2s ease, box-shadow 0.3s ease;
+}
+
+.predict-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 15px rgba(0, 123, 255, 0.4);
+}
+    .result {
+      margin-top: 30px;
+      opacity: 0;
+      animation: slideFadeIn 1.5s ease forwards;
+    }
+    @keyframes fadeIn {
+      0% { opacity: 0; transform: translateY(10px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes slideFadeIn {
+      0% { opacity: 0; transform: translateY(40px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    img.preview {
+      display: none;
+      margin-top: 15px;
+      max-width: 200px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      transition: opacity 0.6s ease;
+    }
+    img:hover {
+      transform: scale(1.05);
+    }
+    .spinner {
+      display: none;
+      margin: 20px auto;
+      border: 5px solid #f3f3f3;
+      border-top: 5px solid #007BFF;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+</head>
+<body>
+  <div class="bubbles">
+    <div class="bubble" style="left: 10%; animation-duration: 10s;"></div>
+    <div class="bubble" style="left: 25%; animation-duration: 12s;"></div>
+    <div class="bubble" style="left: 50%; animation-duration: 15s;"></div>
+    <div class="bubble" style="left: 75%; animation-duration: 11s;"></div>
+    <div class="bubble" style="left: 90%; animation-duration: 14s;"></div>
+  </div>
+
+  <h1>Age and Gender Prediction</h1>
+
+  <form method="POST" enctype="multipart/form-data" onsubmit="showSpinner()">
+        <label for="file-upload" class="custom-file-upload">📁 Choose Image</label>
+        <input id="file-upload" type="file" name="image" accept="image/*" onchange="previewImage(event)" required>
+        <img id="preview" class="preview" src="#" alt="Image Preview" />
+        <button type="submit" class="predict-btn">🔍 Predict</button>
+        <div id="spinner" class="spinner"></div>
+    </form>
+
+  {% if gender and age %}
+  <div id="result-card" class="result">
+    <h2>Prediction Result</h2>
+    <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
+      <img src="{{ url_for('static', filename=image_path) }}" width="200px" style="border-radius: 10px;">
+      <div style="max-width: 300px;">
+        <p><strong>Gender:</strong> {{ gender }}</p>
+        <p><strong>Estimated Age:</strong> {{ age }}</p>
+        <p style="margin-top: 10px; background: #f1f5fb; padding: 12px; border-left: 4px solid #007BFF; border-radius: 5px;">
+          The model predicts this person is likely a <strong>{{ age }}</strong>-year-old <strong>{{ gender }}</strong>.
+        </p>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <script>
+    function showSpinner() {
+      document.getElementById('spinner').style.display = 'block';
+    }
+
+    function previewImage(event) {
+      const reader = new FileReader();
+      reader.onload = function () {
+        const output = document.getElementById('preview');
+        output.src = reader.result;
+        output.style.display = 'block';
+        output.style.opacity = 0;
+        setTimeout(() => output.style.opacity = 1, 50);
+      };
+      reader.readAsDataURL(event.target.files[0]);
+    }
+
+    function triggerConfetti() {
+      const duration = 1 * 1000;
+      const animationEnd = Date.now() + duration;
+      const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 1000 };
+      function randomInRange(min, max) {
+        return Math.random() * (max - min) + min;
+      }
+      const interval = setInterval(function () {
+        const timeLeft = animationEnd - Date.now();
+        if (timeLeft <= 0) return clearInterval(interval);
+        confetti(Object.assign({}, defaults, {
+          particleCount: 5,
+          origin: { x: randomInRange(0.1, 0.9), y: Math.random() - 0.2 }
+        }));
+      }, 250);
+    }
+
+    function speakPrediction(gender, age) {
+      const message = `The predicted gender is ${gender}, and the estimated age is ${age} years old.`;
+      const utterance = new SpeechSynthesisUtterance(message);
+      utterance.lang = 'en-US';
+      utterance.pitch = 1.1;
+      utterance.rate = 1;
+      speechSynthesis.speak(utterance);
+    }
+
+    window.onload = function () {
+      const gender = "{{ gender }}";
+      const age = "{{ age }}";
+      if (gender && age) {
+        triggerConfetti();
+        speakPrediction(gender, age);
+      }
+    };
+  </script>
+</body>
+</html>
